@@ -28,6 +28,8 @@ app.post('/upload', upload.single('file'), async (req, res) => {
         const data = await pdf(req.file.buffer);
         const text = data.text;
 
+        console.log("Extracted Text:", text); // Esto te mostrará en consola lo que se extrajo del PDF
+
         // Extracción de datos
         const nameMatch = text.match(/^Nombre:\s*(.+)$/im);
         const skillsMatch = text.match(/Habilidades:\s*(.+)/i);
