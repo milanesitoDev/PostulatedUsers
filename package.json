@@ -11,15 +11,17 @@
     "start": "concurrently \"npm run start-react\" \"npm run start-server\"",
     "start-react": "cd src && npm run react-dev",
     "start-server": "cd server && npm run server-dev",
-    "react-dev": "vite", 
+    "react-dev": "vite",
     "server-dev": "node server.js"
   },
   "dependencies": {
+    "axios": "^1.6.8",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

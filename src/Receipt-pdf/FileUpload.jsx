@@ -1,36 +1,30 @@
-import { useState } from 'react';
 
-function FileUpload() {
-    const [file, setFile] = useState(null);
 
-    const onFileChange = event => {
-        setFile(event.target.files[0]);
+function DownloadPDF() {
+    const onDownloadPDF = () => {
+        fetch('http://localhost:4000/api/simulate-pdf')
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(new Blob([blob]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'SimulatedApplicants.pdf'); // Nombre del archivo PDF a descargar
+                document.body.appendChild(link);
+                link.click();
+                link.parentNode.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error downloading PDF:', error));
     };
-
-    const onFileUpload = () => {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        // Enviar el archivo al servidor
-        fetch('http://localhost:4000/upload', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data); // Datos JSON devueltos del servidor
-        })
-        .catch(error => console.error('Error:', error));
-    };
+    
 
     return (
         <div>
-            <input type="file" accept="application/pdf" onChange={onFileChange} />
-            <button onClick={onFileUpload}>
-                Upload PDF
+            <button onClick={onDownloadPDF}>
+                Download Simulated PDF
             </button>
         </div>
     );
 }
 
-export default FileUpload;
+export default DownloadPDF;

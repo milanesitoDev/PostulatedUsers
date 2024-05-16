@@ -1,50 +1,56 @@
 require('dotenv').config();
-
 const express = require('express');
-const multer = require('multer');
-const pdf = require('pdf-parse');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 const cors = require('cors');
+const path = require('path');
+const { fetchApplicants } = require('../node_modules/service/linkedinAPI');  
 
 const app = express();
-const port = process.env.PORT || 4000;  // Utiliza una variable de entorno para el puerto
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const port = process.env.PORT || 4000;
 
 app.use(cors());
+app.use(express.static('public'));
 
-// Ruta GET para la raíz del servidor
 app.get('/', (req, res) => {
-    res.send('Bienvenido al servidor de CVs!');
+    res.send('Bienvenido al servidor de simulación de PDFs!');
 });
 
-// Ruta POST para subir y procesar archivos PDF
-app.post('/upload', upload.single('file'), async (req, res) => {
-    if (!req.file || req.file.mimetype !== 'application/pdf') {
-        return res.status(400).send('No file uploaded or file is not a PDF.');
-    }
-
+app.get('/api/generate-pdf', async (req, res) => {
     try {
-        const data = await pdf(req.file.buffer);
-        const text = data.text;
+        const jobId = req.query.jobId;  // Asumiendo que recibes un jobId como query param
+        const data = await fetchApplicants(jobId);
 
-        console.log("Extracted Text:", text); // Esto te mostrará en consola lo que se extrajo del PDF
+        if (!data) {
+            return res.status(404).send('No applicants data found');
+        }
 
-        // Extracción de datos
-        const nameMatch = text.match(/^Nombre:\s*(.+)$/im);
-        const skillsMatch = text.match(/Habilidades:\s*(.+)/i);
-        const experienceMatch = text.match(/Experiencia:([\s\S]*?)(Educación|Certificaciones|Referencias|$)/i);
+        const doc = new PDFDocument();
+        const pdfPath = path.join(__dirname, 'output.pdf');
+        const stream = fs.createWriteStream(pdfPath);
+        
+        doc.pipe(stream);
+        doc.font('Helvetica');
+        doc.fontSize(12);
+        doc.text(JSON.stringify(data, null, 2), {
+            align: 'left',
+            indent: 20,
+            height: 300,
+            ellipsis: true
+        });
+        doc.end();
 
-        const cvData = {
-            nombre: nameMatch ? nameMatch[1].trim() : null,
-            habilidades: skillsMatch ? skillsMatch[1].split(/,\s*/) : [],
-            experiencia: experienceMatch ? experienceMatch[1].trim() : null
-        };
+        stream.on('finish', () => {
+            res.sendFile(pdfPath);
+        });
 
-        res.json(cvData);
+        stream.on('error', (error) => {
+            console.error('Stream error:', error);
+            res.status(500).send("Error creating PDF stream");
+        });
     } catch (error) {
-        console.error('Error processing PDF', error);
-        res.status(500).send(`Error processing PDF: ${error.message}`);
+        console.error('Error generating PDF:', error);
+        res.status(500).send("Error generating PDF");
     }
 });
 

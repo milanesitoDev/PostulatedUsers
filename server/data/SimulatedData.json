@@ -1,0 +1,6 @@
+{
+    "applicants": [
+        { "name": "John Doe", "email": "john@example.com", "skills": ["Node.js", "React"], "experience": "5 years" },
+        { "name": "Jane Smith", "email": "jane@example.com", "skills": ["Python", "Django"], "experience": "3 years" }
+    ]
+}
